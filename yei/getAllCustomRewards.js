@@ -5,6 +5,7 @@ db.items.aggregate(
     pooling: false,
     give_back: false,
     visible: true,
+    deleted_at:null
 }
 }, {
 $lookup: {
@@ -47,6 +48,7 @@ $project: {
     fulfiller_email: { $ifNull: [{$arrayElemAt :["$fulfiller.notification_email",0]},"null"]},
     subdomain: { $ifNull: [{$arrayElemAt :["$companies.subdomain",0]},"null"]},
     groups: { $ifNull: [{$arrayElemAt :["$groups.name",0]},"null"]},
+    group_id: { $ifNull: [{$arrayElemAt :["$groups._id",0]},"null"]},
     categories: { $ifNull: [{$arrayElemAt :["$categories.name",0]},"null"]},
 }
 }]
