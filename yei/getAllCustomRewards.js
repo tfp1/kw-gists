@@ -47,8 +47,10 @@ $project: {
     quantity: 1,
     fulfiller_email: { $ifNull: [{$arrayElemAt :["$fulfiller.notification_email",0]},"null"]},
     subdomain: { $ifNull: [{$arrayElemAt :["$companies.subdomain",0]},"null"]},
-    groups: { $ifNull: [{$arrayElemAt :["$groups.name",0]},"null"]},
-    group_id: { $ifNull: [{$arrayElemAt :["$groups._id",0]},"null"]},
+    //groups: { $ifNull: [{$arrayElemAt :["$groups.name",0]},"null"]},
+    //group_id: { $ifNull: [{$arrayElemAt :["$groups._id",0]},"null"]},
+    groups: { $ifNull: ["$groups.name","null"]},
+    group_id: { $ifNull: ["$groups._id","null"]},
     categories: { $ifNull: [{$arrayElemAt :["$categories.name",0]},"null"]},
 }
 }]
