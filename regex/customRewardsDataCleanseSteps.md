@@ -11,3 +11,5 @@
 9. Replace `\n` with ` `
 10. Replace `\t` with ` `
 11. Replace ` ` with ` `
+12. Replace dates
+     - ```(ISODate\()(\"[\d]{4}-[\d]{1,2}-[\d]{1,2}T[\d]{1,2}:[\d]{1,2}:[\d]{1,2}.[\d]{3}Z")(\)) --> $2```
