@@ -32,7 +32,7 @@ db.companies.aggregate(
         subdomain: 1,
         group_type_id: "$group_types._id",
         group_type_name: "$group_types.name",
-        group_type_locked_as: {$ifNull: ["$group_types.locked_as", ""]},
+        location_department_or_group: {$ifNull: ["$group_types.locked_as", "group"]},
         group_id: "$groups._id",
         group_name: "$groups.name",
     }
