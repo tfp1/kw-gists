@@ -1,4 +1,5 @@
-select sum(`ARR` * `percent_slack_posts`)
+select 
+    sum(`ARR` * `percent_slack_posts`)/date_diff(date(CURRENT_DATE()),date({{Date}}),DAY)*365
 from (
 select
 (count(CASE when `cdc_prod.RR_posts`.`source` = "slack" then 1 else null end) / count(`cdc_prod.RR_posts`.`_id`)) as `percent_slack_posts`,
