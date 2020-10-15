@@ -21,10 +21,10 @@ SELECT
     `goals`.`hgid` AS `GoalId`,
     `goals`.`name` AS `GoalName`,
     `goals`.`description` AS `GoalDescription`,
-    -- AS `GoalType`, --Omitting per Lisa
+    if(`goals`.`status` = "Not Started", "","Give") AS `GoalType`, --This is some wonky bullshit. We _think_ this is right.
     (case
-        when json_extract_scalar(`goals`.`Participant`,"$.ParticipantType") = "Member" then "Individual"
-        when json_extract_scalar(`goals`.`Participant`,"$.ParticipantType") = "Team" then "Deparment"
+        when json_extract_scalar(`goals`.`Participant`,"$.ParticipantType") = "Member"  then "Individual"
+        when json_extract_scalar(`goals`.`Participant`,"$.ParticipantType") = "Team"    then "Deparment"
         when json_extract_scalar(`goals`.`Participant`,"$.ParticipantType") = "Company" then "Company"
         else null end) as `GoalSubType`,
     `goals`.`status` AS `Status`,
@@ -32,15 +32,19 @@ SELECT
     `goals`.`percentcompletion` AS `GoalProgressCompletionPercent`,
     `goals`.`weight` AS `GoalWeight`,
     date(timestamp_millis(cast(`goals`.`createddate`as Int64))) AS `GoalCreateDate`,
-    --Goal Due Date (30) -- Omitting per Lisa
+    (case
+        when json_extract_scalar(`goals`.`KeyResults`,"$[0].DueDate") is null then null
+        when date(timestamp_millis(cast(safe_cast(json_extract_scalar(`goals`.`KeyResults`,"$[0].DueDate") as numeric) as Int64))) = date(timestamp_millis(cast(safe_cast(`cycle`.`ClosePromptDate` as numeric) as Int64))) then null
+        else date(timestamp_millis(cast(safe_cast(json_extract_scalar(`goals`.`KeyResults`,"$[0].DueDate") as numeric) as Int64))) end
+        )    as `GoalDueDate`, -- John, need to update this to take the max keyresults due date. I'm just getting the first one. Also, this is really hacky and can't be how they're doing it in hgApp
     date(timestamp_millis(cast(`goals`.`modifieddate`as Int64))) AS `LastUpdate`,
     json_extract_scalar(`cycle`.`DeliveryMethods`,"$[0].CheckInFrequency") as `UpdateCadence`, --This just takes the first DeliveryMethods object, but we need to know which one to take based on the goal sub-type
     json_extract_scalar(`goals`.`alignedgoal`,"$.Name") as `AlignedTo`,
     json_extract_scalar(`goals`.`alignedgoal`,"$.ParticipantType") as `AlignedType`,
     string_agg( `GoalCollaborators`.`fullname`,', ') as `GoalCollaborators`,
     if(`goals`.`IsPublic` = true, "Public", "Private") as `Visibility`,
-    -- as `GoalCopyActivity`,
-    -- as `GoalActivitywithActivity`,
+    "" as `GoalCopyActivity`,
+    "" as `GoalActivitywithActivity`,
     json_extract_scalar(`goals`.`KeyResults`,"$[0].Name") as `MeasurableResult1`,
     json_extract_scalar(`goals`.`KeyResults`,"$[0].Progress") as `ProgressResult1`,
     json_extract_scalar(`goals`.`KeyResults`,"$[1].Name") as `MeasurableResult2`,
@@ -76,7 +80,9 @@ WHERE
     `companies`.`GroupName` = {{CompanyName}}
     and date(timestamp_millis(cast(`goals`.`modifieddate`as Int64))) > date({{StartDate}})
     and date(timestamp_millis(cast(`goals`.`modifieddate`as Int64))) < date({{EndDate}})
-group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58
-limit 100
+group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,36,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62
 
--- Something-Somethign sub-departments
+-- TODO
+-- UpdateCadence is not quite right. Probably needs to get the correct update cadence for the goal's sub-type, but we assume most have the same update frequency regardless of sub-type so we just return the first cadence available.
+-- Goal Due Date is not quite right. It's overzealous on returning Due Dates, but at least we get some data in there.
+-- `GoalCopyActivity` &  `GoalActivitywithActivity` are both null right now. We think the data comes from `Goal.History` then UNIONed with `EntityActivity` but the JOIN is non-obvious.
